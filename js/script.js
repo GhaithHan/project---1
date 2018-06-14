@@ -5,11 +5,8 @@ function init() {
 }
 
 
-/**
- * Define an object to hold all our images for the game so images
- * are only ever created once. This type of object is known as a
- * singleton.
- */
+// repository for all the images
+
 var imageRepository = new function() {
 	// Define images
 	this.background = new Image();
@@ -43,7 +40,7 @@ var imageRepository = new function() {
 		imageLoaded();
 	}
 
-	// Set images src
+	// images src
 	this.background.src = "img/site-bg.jpg";
 	this.spaceship.src = "img/ship.png";
 	this.bullet.src = "img/bullet.png";
@@ -52,15 +49,10 @@ var imageRepository = new function() {
 }
 
 
-/**
- * Creates the Drawable object which will be the base class for
- * all drawable objects in the game. Sets up defualt variables
- * that all child objects will inherit, as well as the defualt
- * functions.
- */
+// base class for all the draw objects
 function Drawable() {
 	this.init = function(x, y, width, height) {
-		// Defualt variables
+		
 		this.x = x;
 		this.y = y;
 		this.width = width;
@@ -119,9 +111,7 @@ Background.prototype = new Drawable();
 function Bullet(object) {
 	this.alive = false; // Is true if the bullet is currently in use
 	var self = object;
-	/*
-	 * Sets the bullet values
-	 */
+	
 	this.spawn = function(x, y, speed) {
 		this.x = x;
 		this.y = y;
@@ -129,12 +119,7 @@ function Bullet(object) {
 		this.alive = true;
 	};
 
-	/*
-	 * Uses a "drity rectangle" to erase the bullet and moves it.
-	 * Returns true if the bullet moved of the screen, indicating that
-	 * the bullet is ready to be cleared by the pool, otherwise draws
-	 * the bullet.
-	 */
+	
 	this.draw = function() {
 		this.context.clearRect(this.x-1, this.y-1, this.width+2, this.height+2);
 		this.y -= this.speed;
@@ -160,9 +145,7 @@ function Bullet(object) {
 		}
 	};
 
-	/*
-	 * Resets the bullet values
-	 */
+	
 	this.clear = function() {
 		this.x = 0;
 		this.y = 0;
@@ -174,16 +157,8 @@ function Bullet(object) {
 Bullet.prototype = new Drawable();
 
 
-/**
- * QuadTree object.
- *
- * The quadrant indexes are numbered as below:
- *     |
- *  1  |  0
- * ----+----
- *  2  |  3
- *     |
- */
+// QuadTree object
+
 function QuadTree(boundBox, lvl) {
 	var maxObjects = 10;
 	this.bounds = boundBox || {
@@ -197,9 +172,7 @@ function QuadTree(boundBox, lvl) {
 	var level = lvl || 0;
 	var maxLevels = 5;
 
-	/*
-	 * Clears the quadTree and all nodes of objects
-	 */
+	
 	this.clear = function() {
 		objects = [];
 
@@ -210,9 +183,7 @@ function QuadTree(boundBox, lvl) {
 		this.nodes = [];
 	};
 
-	/*
-	 * Get all objects in the quadTree
-	 */
+	
 	this.getAllObjects = function(returnedObjects) {
 		for (var i = 0; i < this.nodes.length; i++) {
 			this.nodes[i].getAllObjects(returnedObjects);
@@ -225,9 +196,7 @@ function QuadTree(boundBox, lvl) {
 		return returnedObjects;
 	};
 
-	/*
-	 * Return all objects that the object could collide with
-	 */
+	
 	this.findObjects = function(returnedObjects, obj) {
 		if (typeof obj === "undefined") {
 			console.log("UNDEFINED OBJECT");
@@ -246,11 +215,7 @@ function QuadTree(boundBox, lvl) {
 		return returnedObjects;
 	};
 
-	/*
-	 * Insert the object into the quadTree. If the tree
-	 * excedes the capacity, it will split and add all
-	 * objects to their corresponding nodes.
-	 */
+	
 	this.insert = function(obj) {
 		if (typeof obj === "undefined") {
 			return;
@@ -266,8 +231,7 @@ function QuadTree(boundBox, lvl) {
 
 		if (this.nodes.length) {
 			var index = this.getIndex(obj);
-			// Only add the object to a subnode if it can fit completely
-			// within one
+			
 			if (index != -1) {
 				this.nodes[index].insert(obj);
 
@@ -277,7 +241,7 @@ function QuadTree(boundBox, lvl) {
 
 		objects.push(obj);
 
-		// Prevent infinite splitting
+	
 		if (objects.length > maxObjects && level < maxLevels) {
 			if (this.nodes[0] == null) {
 				this.split();
@@ -297,23 +261,19 @@ function QuadTree(boundBox, lvl) {
 		}
 	};
 
-	/*
-	 * Determine which node the object belongs to. -1 means
-	 * object cannot completely fit within a node and is part
-	 * of the current node
-	 */
+	
 	this.getIndex = function(obj) {
 
 		var index = -1;
 		var verticalMidpoint = this.bounds.x + this.bounds.width / 2;
 		var horizontalMidpoint = this.bounds.y + this.bounds.height / 2;
 
-		// Object can fit completely within the top quadrant
+		
 		var topQuadrant = (obj.y < horizontalMidpoint && obj.y + obj.height < horizontalMidpoint);
-		// Object can fit completely within the bottom quandrant
+		
 		var bottomQuadrant = (obj.y > horizontalMidpoint);
 
-		// Object can fit completely within the left quadrants
+		
 		if (obj.x < verticalMidpoint &&
 				obj.x + obj.width < verticalMidpoint) {
 			if (topQuadrant) {
@@ -323,7 +283,7 @@ function QuadTree(boundBox, lvl) {
 				index = 2;
 			}
 		}
-		// Object can fix completely within the right quandrants
+		
 		else if (obj.x > verticalMidpoint) {
 			if (topQuadrant) {
 				index = 0;
@@ -336,11 +296,9 @@ function QuadTree(boundBox, lvl) {
 		return index;
 	};
 
-	/*
-	 * Splits the node into 4 subnodes
-	 */
+	
 	this.split = function() {
-		// Bitwise or [html5rocks]
+		
 		var subWidth = (this.bounds.width / 2) | 0;
 		var subHeight = (this.bounds.height / 2) | 0;
 
@@ -372,7 +330,7 @@ function QuadTree(boundBox, lvl) {
 }
 
 
-// the pool object contain the two existing types bullets
+
 
 function Pool(maxSize) {
 	var size = maxSize; 
@@ -552,7 +510,7 @@ function Enemy() {
 		this.alive = true;
 		this.leftEdge = this.x - 90;
 		this.rightEdge = this.x + 90;
-		this.bottomEdge = this.y + 140;
+		this.bottomEdge = this.y + 230;
 	};
 
 	
@@ -638,15 +596,13 @@ function Game() {
         this.mainCanvas.height = window.innerHeight;
         };   
 
-		// Test to see if canvas is supported. Only need to
-		// check one canvas
+		
 		if (this.bgCanvas.getContext) {
 			this.bgContext = this.bgCanvas.getContext('2d');
 			this.shipContext = this.shipCanvas.getContext('2d');
 			this.mainContext = this.mainCanvas.getContext('2d');
 
-			// Initialize objects to contain their context and canvas
-			// information
+			
 			Background.prototype.context = this.bgContext;
 			Background.prototype.canvasWidth = this.bgCanvas.width;
 			Background.prototype.canvasHeight = this.bgCanvas.height;
@@ -663,11 +619,11 @@ function Game() {
 			Enemy.prototype.canvasWidth = this.mainCanvas.width;
 			Enemy.prototype.canvasHeight = this.mainCanvas.height;
 
-			// Initialize the background object
+			
 			this.background = new Background();
-			this.background.init(0,0); // Set draw point to 0,0
+			this.background.init(0,0); 
 
-			// Initialize the ship object
+			
 			this.ship = new Ship();
 			// Set the ship to start near the bottom middle of the canvas
 			this.shipStartX = this.shipCanvas.width/2 - imageRepository.spaceship.width;
@@ -713,15 +669,15 @@ function Game() {
 	this.spawnWave = function() {
 		var height = imageRepository.enemy.height;
 		var width = imageRepository.enemy.width;
-		var x = 100;
+		var x = 450;
 		var y = -height;
 		var spacer = y * 1.5;
 		for (var i = 1; i <= 18; i++) {
 			this.enemyPool.get(x,y,2);
 			x += width + 25;
 			if (i % 6 == 0) {
-				x = 100;
-				y += spacer
+				x = 450;
+				y += spacer;
 			}
 		}
 	}
@@ -769,9 +725,6 @@ function Game() {
 	};
 }
 
-/**
- * Ensure the game sound has loaded before starting the game
- */
 function checkReadyState() {
 	if (game.gameOverAudio.readyState === 4 && game.backgroundAudio.readyState === 4) {
 		window.clearInterval(game.checkAudio);
@@ -781,22 +734,17 @@ function checkReadyState() {
 }
 
 
-/**
- * A sound pool to use for the sound effects
- */
+// the sound object
 function SoundPool(maxSize) {
-	var size = maxSize; // Max bullets allowed in the pool
+	var size = maxSize; 
 	var pool = [];
 	this.pool = pool;
 	var currSound = 0;
 
-	/*
-	 * Populates the pool array with the given object
-	 */
+	
 	this.init = function(object) {
 		if (object == "laser") {
 			for (var i = 0; i < size; i++) {
-				// Initalize the object
 				laser = new Audio("sounds/laser.wav");
 				laser.volume = .12;
 				laser.load();
@@ -813,9 +761,7 @@ function SoundPool(maxSize) {
 		}
 	};
 
-	/*
-	 * Plays a sound
-	 */
+	
 	this.get = function() {
 		if(pool[currSound].currentTime == 0 || pool[currSound].ended) {
 			pool[currSound].play();
@@ -826,10 +772,7 @@ function SoundPool(maxSize) {
 
 
 /**
- * The animation loop. Calls the requestAnimationFrame shim to
- * optimize the game loop and draws all game objects. This
- * function must be a gobal function and cannot be within an
- * object.
+ * The animation loop. 
  */
 function animate() {
 	document.getElementById('score').innerHTML = game.playerScore;
@@ -869,7 +812,7 @@ function detectCollision() {
 
 		for (y = 0, length = obj.length; y < length; y++) {
 
-			// DETECT COLLISION ALGORITHM
+			
 			if (objects[x].collidableWith === obj[y].type &&
 				(objects[x].x < obj[y].x + obj[y].width &&
 			     objects[x].x + objects[x].width > obj[y].x &&
@@ -883,8 +826,7 @@ function detectCollision() {
 };
 
 
-// The keycodes that will be mapped when a user presses a button.
-// Original code by Doug McInnes
+
 KEY_CODES = {
   32: 'space',
   37: 'left',
@@ -893,35 +835,21 @@ KEY_CODES = {
   40: 'down',
 }
 
-// Creates the array to hold the KEY_CODES and sets all their values
-// to true. Checking true/flase is the quickest way to check status
-// of a key press and which one was pressed when determining
-// when to move and which direction.
+
 KEY_STATUS = {};
 for (code in KEY_CODES) {
   KEY_STATUS[KEY_CODES[code]] = false;
 }
-/**
- * Sets up the document to listen to onkeydown events (fired when
- * any key on the keyboard is pressed down). When a key is pressed,
- * it sets the appropriate direction to true to let us know which
- * key it was.
- */
+
 document.onkeydown = function(e) {
-	// Firefox and opera use charCode instead of keyCode to
-	// return which key was pressed.
+	
 	var keyCode = (e.keyCode) ? e.keyCode : e.charCode;
   if (KEY_CODES[keyCode]) {
 		e.preventDefault();
     KEY_STATUS[KEY_CODES[keyCode]] = true;
   }
 }
-/**
- * Sets up the document to listen to ownkeyup events (fired when
- * any key on the keyboard is released). When a key is released,
- * it sets teh appropriate direction to false to let us know which
- * key it was.
- */
+
 document.onkeyup = function(e) {
   var keyCode = (e.keyCode) ? e.keyCode : e.charCode;
   if (KEY_CODES[keyCode]) {
@@ -931,11 +859,7 @@ document.onkeyup = function(e) {
 }
 
 
-/**
- * requestAnim shim layer by Paul Irish
- * Finds the first API that works to optimize the animation loop,
- * otherwise defaults to setTimeout().
- */
+
 window.requestAnimFrame = (function(){
 	return  window.requestAnimationFrame       ||
 			window.webkitRequestAnimationFrame ||
