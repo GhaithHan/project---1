@@ -651,7 +651,7 @@ function Game() {
 			this.explosion = new SoundPool(20);
 			this.explosion.init("explosion");
 
-			this.backgroundAudio = new Audio("sounds/kick_shock.wav");
+			this.backgroundAudio = new Audio("sounds/Into-Battle_v001.mp3");
 			this.backgroundAudio.loop = true;
 			this.backgroundAudio.volume = .25;
 			this.backgroundAudio.load();
